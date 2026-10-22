@@ -19,7 +19,36 @@ CPU maximum clock is the current maximum across cores, not an all-time peak.
 Missing or invalid data shows `--`; Overview also shows `NO DATA`. Zero remains
 a legitimate reading (idle load or stopped fan). No fabricated telemetry.
 
-## Build and apply
+## Arch package (recommended)
+
+`packaging/arch/PKGBUILD` builds `coolerdash-arch-lcd-git`. It provides and
+replaces `coolerdash` / `coolerdash-git`, so pacman owns the custom binary and
+UI instead of seeing out-of-band file edits. The package declares `config.json`
+as a backup file and never packages `credentials.json`.
+
+From a clone of this repository:
+
+1. Run `packaging/arch/install-package.sh` once. It builds, checks, and installs
+   the package through polkit (or sudo when polkit is unavailable).
+2. For later Arch LCD releases, run `packaging/arch/update-installed.sh`. It
+   refuses dirty worktrees, performs a fast-forward pull, rebuilds, checks, and
+   upgrades through pacman.
+3. Normal system upgrades cannot silently replace these files with
+   `coolerdash-git`, because the packages conflict. Installing the stock package
+   explicitly requires agreeing to remove the Arch package.
+
+This GitHub package is not an AUR entry, so `yay -Syu` does not discover new
+fork commits by itself. Use `update-installed.sh`, or publish the same PKGBUILD
+to the AUR later. The package still participates normally in dependency and file
+ownership checks.
+
+For upstream CoolerDash changes, run `packaging/arch/check-upstream.sh`. If new
+commits exist, `prepare-upstream-update.sh` creates a review branch and rebases
+the Arch commits. It stops on conflicts and runs renderer checks after a clean
+rebase. Review all five pages before merging to `main`. `export-patch.sh` exports
+the current fork delta when a standalone patch is needed.
+
+## Manual bundle (fallback)
 
 Requires the existing CoolerDash build dependencies and JetBrainsMono Nerd Font
 for the local Arch glyph. No new runtime libraries are introduced.
@@ -28,13 +57,16 @@ for the local Arch glyph. No new runtime libraries are introduced.
 2. Run `sudo bash build/arch-bundle/apply.sh` to upgrade the existing installation.
 3. Open CoolerDash plugin settings, Display, and choose Arch Page. Save applies it.
 
-For a prebuilt bundle, run `sudo bash ./apply.sh` inside its folder.
+For the existing prebuilt bundle, run
+`sudo bash /home/arch/Documents/Codex/2026-10-21/redesign-my-coolercontrol-coolerdash-lcd-layout/outputs/coolerdash-arch-lcd/apply.sh`.
 The installer preserves credentials and selected sensor slots, stops only the
 CoolerDash plugin, installs the binary/UI/theme, and restarts it. It keeps stock
 originals as `*.arch-layout.bak` and the preceding working revision in a private
 `arch-upgrade.*` directory beside plugin config. Failure triggers rollback.
 `sudo bash ./restore.sh` restores the original stock installation, not revision 2.
 Package upgrades may replace the custom binary and UI; rebuild/reapply if needed.
+This warning applies to manual installation only; the Arch package above owns
+the custom files and conflicts with stock CoolerDash packages.
 
 ## Controls
 
@@ -68,7 +100,8 @@ Shared native type tokens live near the top of `src/mods/arch.c`: 21px brand,
 28px clock, 15px date, 12px labels, 21px metrics, and 42px hero readings. Arch
 glyph is 34px; overview icons are 24px. Uniform resolution scaling and bounded
 text fitting preserve the circular safe area. `content_scale_factor` adjusts
-the full composition's inset. Keep `- Arch Linux -`; clock/date have no labels.
+the full composition's inset. Keep `- Arch Linux -`; clock/date have no labels
+and appear only on Overview. Detail pages use that lower space for telemetry.
 
 Slow orbital light, gently glowing segments, and an overview connection trace
 provide motion without moving or fading readings. Five bottom dots indicate

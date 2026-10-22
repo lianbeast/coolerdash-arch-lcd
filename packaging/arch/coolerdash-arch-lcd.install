@@ -1,0 +1,41 @@
+_plugin_dir=/var/lib/coolercontrol/plugins/coolerdash
+
+_ensure_runtime_files() {
+    install -d -m755 "${_plugin_dir}"
+    if [[ ! -f ${_plugin_dir}/credentials.json ]]; then
+        printf '{\n  "access_token": ""\n}\n' > "${_plugin_dir}/credentials.json"
+    fi
+    chmod 600 "${_plugin_dir}/config.json" "${_plugin_dir}/credentials.json" 2>/dev/null || true
+    if getent passwd cc-plugin-user >/dev/null; then
+        chown cc-plugin-user:cc-plugin-user \
+            "${_plugin_dir}/config.json" "${_plugin_dir}/credentials.json"
+    fi
+}
+
+_restart_plugin() {
+    command -v systemctl >/dev/null 2>&1 || return 0
+    if systemctl is-active --quiet cc-plugin-coolerdash.service; then
+        systemctl restart cc-plugin-coolerdash.service || true
+    elif systemctl is-active --quiet coolercontrold.service; then
+        systemctl restart coolercontrold.service || true
+    fi
+}
+
+post_install() {
+    _ensure_runtime_files
+    _restart_plugin
+    echo "CoolerDash Arch LCD installed. Configure pages in CoolerDash Display settings."
+}
+
+post_upgrade() {
+    _ensure_runtime_files
+    _restart_plugin
+    echo "CoolerDash Arch LCD upgraded. Existing config and credentials preserved."
+    [[ ! -f ${_plugin_dir}/config.json.pacnew ]] || \
+        echo "New defaults available at ${_plugin_dir}/config.json.pacnew"
+}
+
+post_remove() {
+    _restart_plugin
+    echo "Runtime config and credentials remain in ${_plugin_dir}."
+}

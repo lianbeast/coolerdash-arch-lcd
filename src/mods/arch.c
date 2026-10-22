@@ -176,18 +176,19 @@ static void detail_page(cairo_t *cr, const Config *config,
             state = get_slot_bar_color(config, slots[page - 1], entry->value);
         }
     }
-    text(cr, titles[page - 1], PAGE_CENTER, 99, LABEL_SIZE, 220, 14, muted);
-    text(cr, value, PAGE_CENTER, 128, HERO_SIZE, 220, 44, white);
+    text(cr, titles[page - 1], PAGE_CENTER, 104, LABEL_SIZE, 220, 14, muted);
+    text(cr, value, PAGE_CENTER, 139, HERO_SIZE, 220, 44, white);
     set_cairo_color_alpha(cr, &state, 0.8);
     cairo_set_line_width(cr, 2);
-    cairo_move_to(cr, 144, 153); cairo_line_to(cr, 176, 153); cairo_stroke(cr);
+    cairo_move_to(cr, 144, 166); cairo_line_to(cr, 176, 166); cairo_stroke(cr);
     for (int i = 0; i < 4; i++)
         metric_text(cr, arch_metric(config, data, metrics[page - 1][i]),
-                    labels[page - 1][i], i % 2 ? 224 : 96, i < 2 ? 166 : 207,
+                    labels[page - 1][i], i % 2 ? 224 : 96, i < 2 ? 184 : 233,
                     white, muted);
     set_cairo_color_alpha(cr, accent, 0.22);
     cairo_set_line_width(cr, 1);
-    cairo_move_to(cr, 160, 165); cairo_line_to(cr, 160, 231); cairo_stroke(cr);
+    cairo_move_to(cr, 160, 183); cairo_line_to(cr, 160, 258); cairo_stroke(cr);
+    cairo_move_to(cr, 88, 272); cairo_line_to(cr, 232, 272); cairo_stroke(cr);
 }
 
 int render_arch_frame(const Config *config, const monitor_sensor_data_t *data,
@@ -297,12 +298,12 @@ int render_arch_frame(const Config *config, const monitor_sensor_data_t *data,
             cairo_stroke(cr);
         }
     }
-    set_cairo_color_alpha(cr, accent, 0.35);
-    cairo_set_line_width(cr, 1);
-    cairo_move_to(cr, 64, 241); cairo_line_to(cr, 256, 241);
-    cairo_stroke(cr);
     if (page == 0)
     {
+        set_cairo_color_alpha(cr, accent, 0.35);
+        cairo_set_line_width(cr, 1);
+        cairo_move_to(cr, 64, 241); cairo_line_to(cr, 256, 241);
+        cairo_stroke(cr);
         set_cairo_color_alpha(cr, accent, 0.25);
         cairo_move_to(cr, 76, 213); cairo_line_to(cr, 160, 225);
         cairo_line_to(cr, 244, 213); cairo_stroke(cr);
@@ -316,27 +317,31 @@ int render_arch_frame(const Config *config, const monitor_sensor_data_t *data,
         }
     }
 
-    time_t now = time(NULL);
-    struct tm local = {0};
-    char time_text[40] = "--:--";
-    char date_text[40] = "--";
-    static const char *days[] = {"SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
-    static const char *months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                                  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-    if (localtime_r(&now, &local))
+    if (page == 0)
     {
-        snprintf(time_text, sizeof(time_text), "%02d:%02d %s",
-                 local.tm_hour % 12 ? local.tm_hour % 12 : 12, local.tm_min,
-                 local.tm_hour < 12 ? "AM" : "PM");
-        snprintf(date_text, sizeof(date_text), "%s: %s %02d",
-                 days[local.tm_wday], months[local.tm_mon], local.tm_mday);
+        time_t now = time(NULL);
+        struct tm local = {0};
+        char time_text[40] = "--:--";
+        char date_text[40] = "--";
+        static const char *days[] = {"SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
+        static const char *months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                                      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+        if (localtime_r(&now, &local))
+        {
+            snprintf(time_text, sizeof(time_text), "%02d:%02d %s",
+                     local.tm_hour % 12 ? local.tm_hour % 12 : 12, local.tm_min,
+                     local.tm_hour < 12 ? "AM" : "PM");
+            snprintf(date_text, sizeof(date_text), "%s: %s %02d",
+                     days[local.tm_wday], months[local.tm_mon], local.tm_mday);
+        }
+        text(cr, time_text, 160, 262, CLOCK_SIZE, 220, 30, white);
+        text(cr, date_text, 160, 288, DATE_SIZE, 174, 18, muted);
     }
-    text(cr, time_text, 160, 262, CLOCK_SIZE, 220, 30, white);
-    text(cr, date_text, 160, 288, DATE_SIZE, 174, 18, muted);
     for (int i = 0; i < 5; i++)
     {
         set_cairo_color_alpha(cr, i == page ? white : accent, i == page ? 1 : 0.4);
-        cairo_arc(cr, 140 + i * 10, 306, i == page ? 2.2 : 1.5, 0, 2 * DISPLAY_M_PI);
+        cairo_arc(cr, 140 + i * 10, page == 0 ? 306 : 291,
+                  i == page ? 2.2 : 1.5, 0, 2 * DISPLAY_M_PI);
         cairo_fill(cr);
     }
     cairo_surface_flush(surface);

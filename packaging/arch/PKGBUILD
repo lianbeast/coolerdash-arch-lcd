@@ -1,0 +1,76 @@
+# Maintainer: Lian Beast
+
+_pkgbase=coolerdash-arch-lcd
+pkgname=${_pkgbase}-git
+pkgver=3.3.6.r759.gc611b87
+pkgrel=1
+pkgdesc="CoolerDash with animated Arch Linux telemetry layouts for NZXT LCDs"
+arch=('x86_64')
+url="https://github.com/lianbeast/coolerdash-arch-lcd"
+license=('MIT')
+depends=(
+    'cairo'
+    'coolercontrold'
+    'curl'
+    'fontconfig'
+    'gdk-pixbuf2'
+    'glibc'
+    'glib2'
+    'jansson'
+    'ttf-jetbrains-mono-nerd'
+    'ttf-roboto'
+)
+makedepends=('git')
+provides=("coolerdash=${pkgver}" "coolerdash-git=${pkgver}")
+conflicts=('coolerdash' 'coolerdash-git')
+replaces=('coolerdash' 'coolerdash-git')
+backup=('var/lib/coolercontrol/plugins/coolerdash/config.json')
+install=coolerdash-arch-lcd.install
+source=("${_pkgbase}::git+https://github.com/lianbeast/coolerdash-arch-lcd.git#branch=main")
+sha256sums=('SKIP')
+
+pkgver() {
+    cd "${srcdir}/${_pkgbase}"
+    printf '%s.r%s.g%s' "$(<VERSION)" "$(git rev-list --count HEAD)" \
+        "$(git rev-parse --short HEAD)"
+}
+
+build() {
+    cd "${srcdir}/${_pkgbase}"
+    make clean
+    make -j"$(nproc)"
+}
+
+check() {
+    cd "${srcdir}/${_pkgbase}"
+    make preview-check
+}
+
+package() {
+    cd "${srcdir}/${_pkgbase}"
+
+    install -Dm755 bin/coolerdash \
+        "${pkgdir}/usr/libexec/coolerdash/coolerdash"
+    install -dm755 "${pkgdir}/usr/bin"
+    ln -s ../libexec/coolerdash/coolerdash "${pkgdir}/usr/bin/coolerdash"
+
+    local plugin_dir="${pkgdir}/var/lib/coolercontrol/plugins/coolerdash"
+    install -dm755 "${plugin_dir}/ui"
+    install -m644 README.md CHANGELOG.md VERSION "${plugin_dir}/"
+    install -m600 examples/arch-config.json "${plugin_dir}/config.json"
+    install -m644 etc/coolercontrol/plugins/coolerdash/ui/index.html \
+        "${plugin_dir}/ui/index.html"
+    install -m644 images/shutdown.png "${plugin_dir}/shutdown.png"
+    install -m644 etc/coolercontrol/plugins/coolerdash/manifest.toml \
+        "${plugin_dir}/manifest.toml"
+
+    sed -i "s/{{VERSION}}/${pkgver}/g" "${plugin_dir}/manifest.toml"
+    sed -i "s/{{VERSION}}/${pkgver}/g" "${plugin_dir}/ui/index.html"
+
+    install -Dm644 docs/arch-lcd.md \
+        "${pkgdir}/usr/share/doc/${pkgname}/arch-lcd.md"
+    install -Dm644 examples/arch-config.json \
+        "${pkgdir}/usr/share/${_pkgbase}/arch-config.json"
+    install -Dm644 LICENSE \
+        "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

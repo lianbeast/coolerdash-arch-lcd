@@ -46,6 +46,8 @@ existing semantic config keys: `display_background`, `font_temp`, `font_label`,
 and `bar_border` (accent). Brand glyph is 34px; telemetry icons remain 24px.
 All dimensions are logical 320px units scaled uniformly for the detected LCD.
 Text fits bounded boxes; the live clock/date have no TIME or DATE prefixes.
+Clock and date appear only on Overview; detail pages use the lower area for
+their second metric row and page indicator.
 
 Run `make preview-check` for channel isolation, invalid data, carousel boundary,
 reduced-motion assertions, and actual Cairo PNGs. The helper also accepts
