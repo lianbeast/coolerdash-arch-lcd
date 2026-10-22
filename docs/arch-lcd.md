@@ -46,6 +46,9 @@ The installer makes a root-owned snapshot of active `config.json` and
 `credentials.json`, completes the pacman transaction, restores those exact
 runtime files, and restarts the plugin. Snapshots remain as
 `package-backup.*` directories beside plugin config for recovery.
+CoolerControl changes ownership of runtime plugin files to `cc-plugin-user`;
+`pacman -Qkk` can therefore report ownership differences there. Binary and UI
+checksums remain package-verifiable; config content differences are expected.
 
 For upstream CoolerDash changes, run `packaging/arch/check-upstream.sh`. If new
 commits exist, `prepare-upstream-update.sh` creates a review branch and rebases

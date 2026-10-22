@@ -2,7 +2,7 @@
 
 _pkgbase=coolerdash-arch-lcd
 pkgname=${_pkgbase}-git
-pkgver=3.3.6.r759.gc611b87
+pkgver=3.3.6.r762.ga4817d4
 pkgrel=1
 pkgdesc="CoolerDash with animated Arch Linux telemetry layouts for NZXT LCDs"
 arch=('x86_64')
@@ -55,6 +55,9 @@ package() {
     ln -s ../libexec/coolerdash/coolerdash "${pkgdir}/usr/bin/coolerdash"
 
     local plugin_dir="${pkgdir}/var/lib/coolercontrol/plugins/coolerdash"
+    install -dm711 "${pkgdir}/var/lib/coolercontrol"
+    install -dm755 "${pkgdir}/var/lib/coolercontrol/plugins"
+    install -dm1775 "${plugin_dir}"
     install -dm755 "${plugin_dir}/ui"
     install -m644 README.md CHANGELOG.md VERSION "${plugin_dir}/"
     install -m600 examples/arch-config.json "${plugin_dir}/config.json"

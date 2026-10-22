@@ -1,6 +1,6 @@
 pkgbase = coolerdash-arch-lcd-git
 	pkgdesc = CoolerDash with animated Arch Linux telemetry layouts for NZXT LCDs
-	pkgver = 3.3.6.r759.gc611b87
+	pkgver = 3.3.6.r762.ga4817d4
 	pkgrel = 1
 	url = https://github.com/lianbeast/coolerdash-arch-lcd
 	install = coolerdash-arch-lcd.install
@@ -17,8 +17,8 @@ pkgbase = coolerdash-arch-lcd-git
 	depends = jansson
 	depends = ttf-jetbrains-mono-nerd
 	depends = ttf-roboto
-	provides = coolerdash=3.3.6.r759.gc611b87
-	provides = coolerdash-git=3.3.6.r759.gc611b87
+	provides = coolerdash=3.3.6.r762.ga4817d4
+	provides = coolerdash-git=3.3.6.r762.ga4817d4
 	conflicts = coolerdash
 	conflicts = coolerdash-git
 	replaces = coolerdash
