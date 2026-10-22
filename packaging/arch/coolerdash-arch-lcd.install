@@ -7,6 +7,8 @@ _ensure_runtime_files() {
     fi
     chmod 600 "${_plugin_dir}/config.json" "${_plugin_dir}/credentials.json" 2>/dev/null || true
     if getent passwd cc-plugin-user >/dev/null; then
+        chgrp cc-plugin-user "${_plugin_dir}"
+        chmod 1775 "${_plugin_dir}"
         chown cc-plugin-user:cc-plugin-user \
             "${_plugin_dir}/config.json" "${_plugin_dir}/credentials.json"
     fi

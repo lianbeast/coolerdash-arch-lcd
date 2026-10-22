@@ -2,7 +2,7 @@
 
 _pkgbase=coolerdash-arch-lcd
 pkgname=${_pkgbase}-git
-pkgver=3.3.6.r762.ga4817d4
+pkgver=3.3.6.r763.g3896ca7
 pkgrel=1
 pkgdesc="CoolerDash with animated Arch Linux telemetry layouts for NZXT LCDs"
 arch=('x86_64')
