@@ -32,6 +32,18 @@
 #define LEGACY_LCD_IMAGE_PATH "/etc/coolercontrol/lcd_image.png"
 #define DEFAULT_LCD_IMAGE_PATH DEFAULT_COOLERDASH_PLUGIN_DIR "/coolerdash.png"
 
+const char *const arch_channel_keys[ARCH_CHANNEL_COUNT] = {
+    "arch_cpu_speed", "arch_cpu_load", "arch_cpu_power", "arch_cpu_peak",
+    "arch_gpu_speed", "arch_gpu_load", "arch_gpu_power", "arch_gpu_fan",
+    "arch_pump_rpm", "arch_fan_rpm", "arch_pump_duty", "arch_fan_duty"
+};
+/* Verified CoolerControl channel names, including its category suffixes. */
+const char *const arch_channel_defaults[ARCH_CHANNEL_COUNT] = {
+    "CPU Freq Avg Freq", "CPU Load Duty", "power0 Watts", "CPU Freq Max Freq",
+    "freq1 Freq", "GPU Load Duty", "power1_average Watts", "fan1 RPM",
+    "pump RPM", "fan RPM", "pump Duty", "fan Duty"
+};
+
 // ============================================================================
 // Global Logging Implementation
 // ============================================================================
@@ -162,6 +174,19 @@ static void set_display_defaults(Config *config)
                        sizeof(config->display_background_image_fit), "cover");
     if (config->circle_switch_interval == 0)
         config->circle_switch_interval = 8;
+    if (strcmp(config->arch_page, "rotate") != 0 &&
+        strcmp(config->arch_page, "cpu") != 0 &&
+        strcmp(config->arch_page, "gpu") != 0 &&
+        strcmp(config->arch_page, "liquid") != 0 &&
+        strcmp(config->arch_page, "power") != 0)
+        SAFE_STRCPY(config->arch_page, "overview");
+    if (config->arch_page_seconds < 5 || config->arch_page_seconds > 120)
+        config->arch_page_seconds = 12;
+    if (!(config->arch_motion_seconds >= 10 && config->arch_motion_seconds <= 120))
+        config->arch_motion_seconds = 40;
+    for (int i = 0; i < ARCH_CHANNEL_COUNT; i++)
+        if (!config->arch_channels[i][0])
+            SAFE_STRCPY(config->arch_channels[i], arch_channel_defaults[i]);
     if (strcmp(config->circle_layout, "centered") != 0)
         cc_safe_strcpy(config->circle_layout, sizeof(config->circle_layout), "classic");
     if (config->circle_show_extra_info < 0)
@@ -1126,6 +1151,23 @@ static void load_display_from_json(json_t *root, Config *config)
     if (json_is_string(circle_layout))
         SAFE_STRCPY(config->circle_layout, json_string_value(circle_layout));
 
+    json_t *page = json_object_get(display, "arch_page");
+    if (json_is_string(page))
+        SAFE_STRCPY(config->arch_page, json_string_value(page));
+    json_t *dwell = json_object_get(display, "arch_page_seconds");
+    if (json_is_integer(dwell) && json_integer_value(dwell) >= 5 &&
+        json_integer_value(dwell) <= 120)
+        config->arch_page_seconds = (unsigned)json_integer_value(dwell);
+    json_t *motion = json_object_get(display, "arch_motion_seconds");
+    if (json_is_number(motion))
+        config->arch_motion_seconds = json_number_value(motion);
+    for (int i = 0; i < ARCH_CHANNEL_COUNT; i++)
+    {
+        json_t *channel = json_object_get(display, arch_channel_keys[i]);
+        if (json_is_string(channel))
+            SAFE_STRCPY(config->arch_channels[i], json_string_value(channel));
+    }
+
     json_t *circle_interval = json_object_get(display, "circle_switch_interval");
     if (circle_interval && json_is_integer(circle_interval))
     {
@@ -1147,14 +1189,14 @@ static void load_display_from_json(json_t *root, Config *config)
         "circle_show_load", "circle_show_rpm", "circle_show_watts",
         "circle_show_frequency", "circle_show_bar",
         "dual_show_bars", "split_show_load", "split_show_watts", "split_show_rpm",
-        "split_ring_by_sensor", "sensor_ring_enabled"
+        "split_ring_by_sensor", "sensor_ring_enabled", "arch_reduce_motion"
     };
     int *element_flags[] = {
         &config->circle_show_load, &config->circle_show_rpm,
         &config->circle_show_watts, &config->circle_show_frequency,
         &config->circle_show_bar, &config->dual_show_bars,
         &config->split_show_load, &config->split_show_watts, &config->split_show_rpm,
-        &config->split_ring_by_sensor, &config->sensor_ring_enabled
+        &config->split_ring_by_sensor, &config->sensor_ring_enabled, &config->arch_reduce_motion
     };
     for (size_t i = 0; i < sizeof(element_keys) / sizeof(element_keys[0]); ++i)
     {

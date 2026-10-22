@@ -44,8 +44,8 @@ PROGRAM = $(BINDIR)/$(TARGET)
 
 # Source code files
 MAIN_SOURCE = $(SRCDIR)/main.c
-SRC_MODULES = $(SRCDIR)/device/config.c $(SRCDIR)/device/profile.c $(SRCDIR)/device/hwreport.c $(SRCDIR)/device/images.c $(SRCDIR)/srv/cc_main.c $(SRCDIR)/srv/cc_conf.c $(SRCDIR)/srv/cc_sensor.c $(SRCDIR)/mods/display.c $(SRCDIR)/mods/dual.c $(SRCDIR)/mods/circle.c $(SRCDIR)/mods/split.c
-HEADERS = $(SRCDIR)/device/config.h $(SRCDIR)/device/profile.h $(SRCDIR)/device/hwreport.h $(SRCDIR)/device/images.h $(SRCDIR)/srv/cc_main.h $(SRCDIR)/srv/cc_conf.h $(SRCDIR)/srv/cc_sensor.h $(SRCDIR)/mods/display.h $(SRCDIR)/mods/dual.h $(SRCDIR)/mods/circle.h $(SRCDIR)/mods/split.h
+SRC_MODULES = $(SRCDIR)/device/config.c $(SRCDIR)/device/profile.c $(SRCDIR)/device/hwreport.c $(SRCDIR)/device/images.c $(SRCDIR)/srv/cc_main.c $(SRCDIR)/srv/cc_conf.c $(SRCDIR)/srv/cc_sensor.c $(SRCDIR)/mods/display.c $(SRCDIR)/mods/dual.c $(SRCDIR)/mods/circle.c $(SRCDIR)/mods/split.c $(SRCDIR)/mods/arch.c
+HEADERS = $(SRCDIR)/device/config.h $(SRCDIR)/device/profile.h $(SRCDIR)/device/hwreport.h $(SRCDIR)/device/images.h $(SRCDIR)/srv/cc_main.h $(SRCDIR)/srv/cc_conf.h $(SRCDIR)/srv/cc_sensor.h $(SRCDIR)/mods/display.h $(SRCDIR)/mods/dual.h $(SRCDIR)/mods/circle.h $(SRCDIR)/mods/split.h $(SRCDIR)/mods/arch.h
 OBJECTS = $(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(SRC_MODULES))
 
 MANIFEST = etc/coolercontrol/plugins/coolerdash/manifest.toml
@@ -81,6 +81,23 @@ RESET = \033[0m
 
 # Default target (GNU convention)
 all: $(PROGRAM)
+
+.PHONY: preview-check
+preview-check: $(OBJECTS)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o $(OBJDIR)/render_preview_test examples/render_preview.c $(OBJECTS) $(LDLIBS)
+	$(OBJDIR)/render_preview_test examples/arch-config.json --check
+	$(OBJDIR)/render_preview_test examples/arch-config.json $(OBJDIR)/arch-preview.png
+	$(OBJDIR)/render_preview_test examples/arch-config.json $(OBJDIR)/arch-missing.png --missing
+
+.PHONY: arch-bundle
+arch-bundle: $(PROGRAM) preview-check
+	@mkdir -p $(OBJDIR)/arch-bundle
+	cp $(PROGRAM) $(OBJDIR)/arch-bundle/coolerdash
+	cp etc/coolercontrol/plugins/coolerdash/ui/index.html $(OBJDIR)/arch-bundle/index.html
+	cp examples/arch-config.json $(OBJDIR)/arch-bundle/arch-config.json
+	cp examples/arch-apply.sh $(OBJDIR)/arch-bundle/apply.sh
+	cp examples/arch-restore.sh $(OBJDIR)/arch-bundle/restore.sh
+	cp docs/arch-lcd.md $(OBJDIR)/arch-bundle/README.md
 
 # Standard Build Target - Standard C99 project structure
 $(PROGRAM): $(OBJECTS) $(MAIN_SOURCE) VERSION | $(BINDIR)

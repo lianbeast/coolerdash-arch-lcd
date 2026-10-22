@@ -1281,6 +1281,7 @@ static void show_help(const char *program_name)
     printf(
         "  --dual            Force dual display mode (CPU+GPU simultaneously)\n");
     printf("  --split           Force split mode (CPU/GPU columns without bars)\n");
+    printf("  --arch            Force Arch telemetry suite (five selectable pages)\n");
     printf("  --circle          Force circle mode (alternating sensor display)\n");
     printf("  --hardware-report Collect a sanitized hardware report and exit\n");
     printf("  --test-lcd        With --hardware-report: confirm and run an LCD test\n\n");
@@ -1292,8 +1293,9 @@ static void show_help(const char *program_name)
         "  dual              Shows two sensor values with temperature bars\n");
     printf("  split             Shows CPU and GPU in two bar-free columns\n");
     printf("  circle            Alternating mode using the configured interval\n");
+    printf("  arch              Overview, CPU, GPU, liquid, power; live clock/date\n");
     printf("                    Configure via config.json [display] "
-           "mode=dual|split|circle or CLI flags\n\n");
+           "mode=dual|split|circle|arch or CLI flags\n\n");
     printf("EXAMPLES:\n");
     printf("  sudo systemctl restart coolercontrold     # Restart CoolerControl "
            "(reloads plugin)\n");
@@ -1307,6 +1309,8 @@ static void show_help(const char *program_name)
            "logging\n",
            program_name);
     printf("  %s --split                        # Two-column CPU/GPU display\n",
+           program_name);
+    printf("  %s --arch                         # Arch CPU/GPU/coolant display\n",
            program_name);
     printf("  %s /custom/config.json            # Start with custom "
            "configuration\n\n",
@@ -1720,6 +1724,11 @@ static void parse_arguments(int argc, char **argv, CliOptions *options)
         {
             cc_safe_strcpy(options->display_mode_override,
                            sizeof(options->display_mode_override), "split");
+        }
+        else if (strcmp(argv[i], "--arch") == 0)
+        {
+            cc_safe_strcpy(options->display_mode_override,
+                           sizeof(options->display_mode_override), "arch");
         }
         else if (strcmp(argv[i], "--circle") == 0)
         {

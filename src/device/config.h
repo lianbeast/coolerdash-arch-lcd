@@ -57,6 +57,15 @@ typedef enum
 #define MAX_SENSOR_CONFIGS 32
 #define SENSOR_CONFIG_ID_LEN 256
 
+enum {
+    ARCH_CPU_SPEED, ARCH_CPU_LOAD, ARCH_CPU_POWER, ARCH_CPU_PEAK,
+    ARCH_GPU_SPEED, ARCH_GPU_LOAD, ARCH_GPU_POWER, ARCH_GPU_FAN,
+    ARCH_PUMP_RPM, ARCH_FAN_RPM, ARCH_PUMP_DUTY, ARCH_FAN_DUTY,
+    ARCH_CHANNEL_COUNT
+};
+extern const char *const arch_channel_keys[ARCH_CHANNEL_COUNT];
+extern const char *const arch_channel_defaults[ARCH_CHANNEL_COUNT];
+
 /** @brief Per-sensor thresholds, colors, label and display offsets. */
 typedef struct
 {
@@ -117,6 +126,11 @@ typedef struct Config
     int split_show_load;
     int split_show_watts;
     int split_show_rpm;
+    int arch_reduce_motion;
+    char arch_page[16];
+    unsigned arch_page_seconds;
+    double arch_motion_seconds;
+    char arch_channels[ARCH_CHANNEL_COUNT][48];
     int split_ring_by_sensor;
     int sensor_ring_enabled;
     char sensor_ring_sensor[CONFIG_MAX_SENSOR_SLOT_LEN];

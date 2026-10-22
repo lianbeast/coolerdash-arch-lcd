@@ -1,5 +1,9 @@
 # CoolerDash
 
+**Arch LCD edition:** five animated telemetry pages for the 320x320 Kraken Z.
+See [layouts, verified channels, build, installation, and rollback](docs/arch-lcd.md).
+This edition extends upstream CoolerDash 3.3.6; upstream documentation follows.
+
 Linux LCD telemetry and customization for NZXT Kraken and other AIO coolers, powered by [CoolerControl](https://gitlab.com/coolercontrol/coolercontrol). CoolerDash shows live CPU, GPU, and liquid temperatures with display layouts, sensor choices, and animated GIFs on compatible devices.
 
 <p align="center">

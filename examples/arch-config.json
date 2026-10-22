@@ -1,0 +1,88 @@
+{
+  "daemon": { "address": "http://localhost:11987" },
+  "paths": {
+    "images": "/var/lib/coolercontrol/plugins/coolerdash",
+    "image_coolerdash": "/tmp/coolerdash-arch-preview.png",
+    "image_background": "",
+    "image_shutdown": "/var/lib/coolercontrol/plugins/coolerdash/shutdown.png"
+  },
+  "display": {
+    "mode": "arch",
+    "arch_reduce_motion": false,
+    "arch_page": "rotate",
+    "arch_page_seconds": 12,
+    "arch_motion_seconds": 40,
+    "arch_cpu_speed": "CPU Freq Avg Freq",
+    "arch_cpu_load": "CPU Load Duty",
+    "arch_cpu_power": "power0 Watts",
+    "arch_cpu_peak": "CPU Freq Max Freq",
+    "arch_gpu_speed": "freq1 Freq",
+    "arch_gpu_load": "GPU Load Duty",
+    "arch_gpu_power": "power1_average Watts",
+    "arch_gpu_fan": "fan1 RPM",
+    "arch_pump_rpm": "pump RPM",
+    "arch_fan_rpm": "fan RPM",
+    "arch_pump_duty": "pump Duty",
+    "arch_fan_duty": "fan Duty",
+    "refresh_interval": 0.5,
+    "orientation": 0,
+    "width": 320,
+    "height": 320,
+    "content_scale_factor": 0.94,
+    "sensor_slot_1": "cpu",
+    "sensor_slot_2": "gpu",
+    "sensor_slot_3": "liquid"
+  },
+  "layout": {
+    "ring_width": 0,
+    "ring_opacity": 0,
+    "bar_border_enabled": 0
+  },
+  "colors": {
+    "display_background": { "r": 5, "g": 11, "b": 20 },
+    "bar_background": { "r": 16, "g": 30, "b": 45 },
+    "bar_border": { "r": 23, "g": 147, "b": 209 },
+    "font_temp": { "r": 245, "g": 249, "b": 255 },
+    "font_label": { "r": 145, "g": 170, "b": 191 }
+  },
+  "font": {
+    "face": "JetBrainsMono Nerd Font",
+    "size_temp": 0,
+    "size_labels": 0,
+    "size_duty": 0,
+    "size_watts": 0
+  },
+  "sensors": {
+    "cpu": {
+      "threshold_1": 55, "threshold_2": 70, "threshold_3": 82, "max_scale": 95,
+      "threshold_1_color": { "r": 23, "g": 147, "b": 209 },
+      "threshold_2_color": { "r": 64, "g": 200, "b": 224 },
+      "threshold_3_color": { "r": 255, "g": 184, "b": 77 },
+      "threshold_4_color": { "r": 255, "g": 91, "b": 91 },
+      "label": "CPU"
+    },
+    "gpu": {
+      "threshold_1": 55, "threshold_2": 70, "threshold_3": 82, "max_scale": 95,
+      "threshold_1_color": { "r": 23, "g": 147, "b": 209 },
+      "threshold_2_color": { "r": 64, "g": 200, "b": 224 },
+      "threshold_3_color": { "r": 255, "g": 184, "b": 77 },
+      "threshold_4_color": { "r": 255, "g": 91, "b": 91 },
+      "label": "GPU"
+    },
+    "liquid": {
+      "threshold_1": 32, "threshold_2": 36, "threshold_3": 42, "max_scale": 55,
+      "threshold_1_color": { "r": 23, "g": 147, "b": 209 },
+      "threshold_2_color": { "r": 64, "g": 200, "b": 224 },
+      "threshold_3_color": { "r": 255, "g": 184, "b": 77 },
+      "threshold_4_color": { "r": 255, "g": 91, "b": 91 },
+      "label": "COOLANT"
+    }
+  },
+  "positioning": {
+    "degree_spacing": 12,
+    "label_offset_x": 0,
+    "label_offset_y": 0,
+    "margin_top": 0,
+    "margin_bottom": 0
+  }
+}

@@ -1,8 +1,8 @@
 # Display Modes
 
-Three modes: **split** (default), **dual**, and **circle**.
+Four modes: **split** (default), **dual**, **circle**, and **arch**.
 
-All three modes can add the optional **Sensor Ring** overlay. Split and Dual
+The three stock modes can add the optional **Sensor Ring** overlay. Split and Dual
 can instead divide the ring between their two visible sensors. In Circle mode,
 the normal ring follows the sensor currently shown on the display. In other
 modes, `display.sensor_ring_sensor` selects its sensor and defaults to `liquid`.
@@ -10,7 +10,47 @@ The ring maps the current value to that sensor's configured maximum and uses
 the same threshold colors as its bars and values. The overlay is off by default
 for backwards-compatible output.
 
-Mode selection: `config.json` → `"display": { "mode": "split" }` or CLI `--split`, `--dual`, or `--circle`.
+Mode selection: `config.json` → `"display": { "mode": "split" }` or CLI `--split`, `--dual`, `--circle`, or `--arch`.
+
+## Arch Mode
+
+Arch mode renders three columns from `sensor_slot_1`, `sensor_slot_2`, and
+`sensor_slot_3` inside a uniformly scaled 320px composition. CPU, GPU and
+coolant outline icons share a 24px grid and 1.5px stroke. Temperature readings
+use whole degrees and status labels follow the configured sensor thresholds.
+Missing/nonfinite readings show `--` and `NO DATA`.
+
+`display.arch_page` selects `overview`, `cpu`, `gpu`, `liquid`, `power`, or
+`rotate`. Rotation shows all five pages, with `arch_page_seconds` (5..120,
+default 12) per page. Missing setting preserves the original fixed overview.
+CPU shows average/max clock, usage, and power. GPU shows core clock, usage,
+power, and fan RPM. Liquid shows temperature, separate pump/fan RPM, and duties.
+Power sums only CPU and GPU readings, never whole-system or wall power.
+
+Metric mappings are editable under Display > Arch metric mappings. The twelve
+`display.arch_cpu_*`, `arch_gpu_*`, `arch_pump_*`, and `arch_fan_*` fields use
+exact CoolerDash channel names. Each is matched by category and the device of
+the corresponding temperature slot. Default names were verified against the
+local Ryzen 5950X, Radeon GPU, and Kraken Z. No fallback to unrelated devices.
+The `--sensors` preview-helper option lists names without device IDs or secrets.
+
+The orbital light uses `arch_motion_seconds` (10..120, default 40). The supplied
+theme targets 0.5-second uploads; no 60fps or GIF playback claim is made.
+`arch_reduce_motion: true` freezes decoration and pins rotation to Overview;
+fixed-page selections remain honored. Clock and telemetry stay live. Browser
+CSS preferences cannot control a native LCD daemon.
+
+Shared type tokens in `arch.c` map a primitive scale to brand (21), clock (28),
+date (15), metric label (12), metric value (21), and hero (42) roles. Colors use
+existing semantic config keys: `display_background`, `font_temp`, `font_label`,
+and `bar_border` (accent). Brand glyph is 34px; telemetry icons remain 24px.
+All dimensions are logical 320px units scaled uniformly for the detected LCD.
+Text fits bounded boxes; the live clock/date have no TIME or DATE prefixes.
+
+Run `make preview-check` for channel isolation, invalid data, carousel boundary,
+reduced-motion assertions, and actual Cairo PNGs. The helper also accepts
+`--page cpu`, `--at 12.5`, `--missing`, `--size 640`, and authenticated `--live`.
+UI previews contain sample data and show Overview when rotation is selected.
 
 ## Display Elements
 

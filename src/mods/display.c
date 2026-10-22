@@ -33,6 +33,7 @@
 #include "../srv/cc_main.h"
 #include "../srv/cc_sensor.h"
 #include "circle.h"
+#include "arch.h"
 #include "display.h"
 #include "dual.h"
 #include "split.h"
@@ -1898,6 +1899,10 @@ void draw_display_image(const struct Config *config)
         // Circle mode: alternating single sensor display
         draw_circle_image(config);
     }
+    else if (strcmp(config->display_mode, "arch") == 0)
+    {
+        draw_arch_image(config);
+    }
     else if (strcmp(config->display_mode, "split") == 0)
     {
         // Split mode: CPU/GPU columns without bars
@@ -1964,6 +1969,33 @@ static void add_preview_sensor(monitor_sensor_data_t *data,
     add_preview_entry(data, slot_value, SENSOR_CATEGORY_FREQ, 4200.0f, "MHz");
 }
 
+void populate_display_preview_data(const Config *config, monitor_sensor_data_t *data)
+{
+    add_preview_sensor(data, config->sensor_slot_1, 45.0f);
+    add_preview_sensor(data, config->sensor_slot_2, 62.0f);
+    add_preview_sensor(data, config->sensor_slot_3, 32.5f);
+    add_preview_sensor(data, config->sensor_ring_sensor, 32.5f);
+    if (strcmp(config->display_mode, "arch") == 0)
+    {
+        const sensor_category_t categories[] = {
+            SENSOR_CATEGORY_FREQ, SENSOR_CATEGORY_DUTY, SENSOR_CATEGORY_WATTS, SENSOR_CATEGORY_FREQ,
+            SENSOR_CATEGORY_FREQ, SENSOR_CATEGORY_DUTY, SENSOR_CATEGORY_WATTS, SENSOR_CATEGORY_RPM,
+            SENSOR_CATEGORY_RPM, SENSOR_CATEGORY_RPM, SENSOR_CATEGORY_DUTY, SENSOR_CATEGORY_DUTY
+        };
+        const float values[] = {3620, 28, 74, 4890, 2250, 76, 186, 1729, 2097, 1724, 65, 75};
+        const char *units[] = {"MHz", "%", "W", "MHz", "MHz", "%", "W", "RPM", "RPM", "RPM", "%", "%"};
+        for (int i = 0; i < ARCH_CHANNEL_COUNT; i++)
+        {
+            const char *slot = i < ARCH_GPU_SPEED ? config->sensor_slot_1 :
+                               i < ARCH_PUMP_RPM ? config->sensor_slot_2 : config->sensor_slot_3;
+            int before = data->sensor_count;
+            add_preview_entry(data, slot, categories[i], values[i], units[i]);
+            if (data->sensor_count > before)
+                SAFE_STRCPY(data->sensors[before].name, config->arch_channels[i]);
+        }
+    }
+}
+
 int render_display_preview(const struct Config *config,
                            const char *device_name)
 {
@@ -1971,13 +2003,12 @@ int render_display_preview(const struct Config *config,
         return 0;
 
     monitor_sensor_data_t data = {0};
-    add_preview_sensor(&data, config->sensor_slot_1, 45.0f);
-    add_preview_sensor(&data, config->sensor_slot_2, 62.0f);
-    add_preview_sensor(&data, config->sensor_slot_3, 32.5f);
-    add_preview_sensor(&data, config->sensor_ring_sensor, 32.5f);
+    populate_display_preview_data(config, &data);
 
     if (strcmp(config->display_mode, "circle") == 0)
         return render_circle_preview(config, &data, device_name);
+    if (strcmp(config->display_mode, "arch") == 0)
+        return render_arch_preview(config, &data, device_name);
     if (strcmp(config->display_mode, "split") == 0)
         return render_split_preview(config, &data, device_name);
     return render_dual_preview(config, &data, device_name);

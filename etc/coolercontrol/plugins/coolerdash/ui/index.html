@@ -763,6 +763,7 @@
                                 <option value="dual">Dual (CPU + GPU simultaneously)</option>
                                 <option value="split">Split (CPU + GPU columns)</option>
                                 <option value="circle">Circle (Alternating display)</option>
+                                <option value="arch">Arch (5-page telemetry)</option>
                             </select>
                         </div>
 
@@ -774,10 +775,38 @@
                                 <option value="centered">Mode 2 — Centered</option>
                             </select>
                         </div>
+                        <div id="arch_layout_group" style="display: none;">
+                            <div class="form-group">
+                                <label class="form-label" for="arch_page">Arch Page</label>
+                                <select name="display.arch_page" id="arch_page" class="form-control">
+                                    <option value="rotate">Rotate all five pages</option>
+                                    <option value="overview">Overview: CPU / GPU / Coolant</option>
+                                    <option value="cpu">CPU: temperature, speed, usage, power</option>
+                                    <option value="gpu">GPU: temperature, speed, usage, power, fan</option>
+                                    <option value="liquid">Liquid: temperature, pump and fan</option>
+                                    <option value="power">Power: CPU + GPU (not wall power)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="arch_page_seconds">Seconds per Page</label>
+                                <input class="form-control" type="number" id="arch_page_seconds" name="display.arch_page_seconds" min="5" max="120" step="1" value="12">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="arch_motion_seconds">Orbit Duration (Seconds)</label>
+                                <input class="form-control" type="number" id="arch_motion_seconds" name="display.arch_motion_seconds" min="10" max="120" step="1" value="40">
+                                <span class="form-hint">Slower is calmer. Upload cadence uses Refresh Interval; 0.5 seconds targets 2 frames/second, subject to hardware speed.</span>
+                            </div>
+                            <details>
+                                <summary>Arch metric mappings (advanced)</summary>
+                                <p class="form-hint">Exact CoolerDash channel names, including category suffixes. Each resolves only on the device selected in its CPU/GPU/liquid slot. Missing channels show --. Enter none to disable.</p>
+                                <div id="arch_channel_fields"></div>
+                            </details>
+                        </div>
                         <fieldset class="display-elements" id="display_elements_group">
                             <legend class="form-label">Display Elements</legend>
                             <span class="form-hint">Choose what to show. The layout adapts to the visible elements.</span>
                             <div class="display-options">
+                                <label class="display-option" data-element-mode="arch"><input type="checkbox" name="display.arch_reduce_motion" id="arch_reduce_motion" value="1">Reduced motion (freeze orbit and rotation; live readings)</label>
                                 <label class="display-option" data-element-mode="dual"><input type="checkbox" name="display.dual_show_bars" id="dual_show_bars" value="1">Temperature Bars</label>
                                 <label class="display-option" data-element-mode="split"><input type="checkbox" name="display.split_show_load" id="split_show_load" value="1">Load (%)</label>
                                 <label class="display-option" data-element-mode="split"><input type="checkbox" name="display.split_show_watts" id="split_show_watts" value="1">Power (W)</label>
@@ -819,6 +848,7 @@
                             <g id="mode_preview_dual" transform="translate(36 36) scale(.70)" fill="#fff"></g>
                             <g id="mode_preview_split" style="display: none;" fill="#fff"></g>
                             <g id="mode_preview_circle" style="display: none;" transform="translate(36 36) scale(.70)" fill="#fff"></g>
+                            <g id="mode_preview_arch" style="display: none;" fill="#fff"></g>
                             <g id="mode_preview_ring" style="display: none;" fill="none" stroke-linecap="round">
                                 <path class="mode-preview-ring-path" d="M40 200 A104 104 0 1 1 200 200" pathLength="100" stroke="#343434" stroke-width="8"/>
                                 <path class="mode-preview-ring-path" id="mode_preview_ring_value" d="M40 200 A104 104 0 1 1 200 200" pathLength="100" stroke="#00ff00" stroke-width="8" stroke-dasharray="0 100"/>
@@ -1494,6 +1524,22 @@
             },
             display: {
                 mode: "split",
+                arch_page: 'overview',
+                arch_page_seconds: 12,
+                arch_motion_seconds: 40,
+                arch_reduce_motion: false,
+                arch_cpu_speed: 'CPU Freq Avg Freq',
+                arch_cpu_load: 'CPU Load Duty',
+                arch_cpu_power: 'power0 Watts',
+                arch_cpu_peak: 'CPU Freq Max Freq',
+                arch_gpu_speed: 'freq1 Freq',
+                arch_gpu_load: 'GPU Load Duty',
+                arch_gpu_power: 'power1_average Watts',
+                arch_gpu_fan: 'fan1 RPM',
+                arch_pump_rpm: 'pump RPM',
+                arch_fan_rpm: 'fan RPM',
+                arch_pump_duty: 'pump Duty',
+                arch_fan_duty: 'fan Duty',
                 circle_switch_interval: 8,
                 circle_layout: 'classic',
                 circle_show_load: true,
@@ -1609,6 +1655,31 @@
                 margin_bottom: 0
             }
         };
+
+        const ARCH_CHANNEL_LABELS = {
+            arch_cpu_speed: 'CPU average speed', arch_cpu_load: 'CPU usage',
+            arch_cpu_power: 'CPU power', arch_cpu_peak: 'CPU maximum speed',
+            arch_gpu_speed: 'GPU core speed', arch_gpu_load: 'GPU usage',
+            arch_gpu_power: 'GPU power', arch_gpu_fan: 'GPU fan RPM',
+            arch_pump_rpm: 'Liquid pump RPM', arch_fan_rpm: 'Liquid fan RPM',
+            arch_pump_duty: 'Liquid pump duty', arch_fan_duty: 'Liquid fan duty'
+        };
+        Object.entries(ARCH_CHANNEL_LABELS).forEach(function ([key, title]) {
+            var group = document.createElement('div');
+            group.className = 'form-group';
+            var label = document.createElement('label');
+            label.className = 'form-label';
+            label.htmlFor = key;
+            label.textContent = title;
+            var input = document.createElement('input');
+            input.className = 'form-control';
+            input.id = key;
+            input.name = 'display.' + key;
+            input.maxLength = 47;
+            input.value = FACTORY_DEFAULTS.display[key];
+            group.append(label, input);
+            document.getElementById('arch_channel_fields').append(group);
+        });
 
         let DEFAULT_CONFIG = null;
         let RESET_CONFIG = null;
@@ -2875,6 +2946,31 @@
             });
             document.getElementById('mode_preview_split').innerHTML = split;
 
+            var arch = '<circle cx="160" cy="160" r="150" fill="none" stroke="#1793d1" opacity=".25"/>';
+            arch += text(160, 46, 34, '\uDB82\uDCC7', 'middle', '#1793d1');
+            arch += text(160, 80, 21, '- Arch Linux -', 'middle');
+            var archSensors = [
+                { x: 76, label: 'CPU', value: '45\u00b0', status: 'COOL', path: 'M6 6H18V18H6Z M9 9H15V15H9Z M8 3V6 M12 3V6 M16 3V6 M8 18V21 M12 18V21 M16 18V21 M3 8H6 M3 12H6 M3 16H6 M18 8H21 M18 12H21 M18 16H21' },
+                { x: 160, label: 'GPU', value: '62\u00b0', status: 'WARM', path: 'M3 6H21V18H3Z M6 18V21 M9 18V20 M12 18V20 M16 12A4 4 0 1 1 8 12A4 4 0 1 1 16 12 M10 10L14 14 M14 10L10 14' },
+                { x: 244, label: 'COOLANT', value: '32\u00b0', status: 'WARM', path: 'M12 2C10 6 5 11 5 15C5 24 19 24 19 15C19 11 14 6 12 2Z M9 15C9 18 10 19 12 19' }
+            ];
+            archSensors.forEach(function (sensor) {
+                arch += '<path d="' + sensor.path + '" transform="translate(' + (sensor.x - 12) + ' 93)" fill="none" stroke="#1793d1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>';
+                arch += text(sensor.x, 135, 12, sensor.label, 'middle', '#91aabf');
+                arch += text(sensor.x, 176, 36, sensor.value, 'middle');
+                arch += text(sensor.x, 197, 10, sensor.status, 'middle', '#40c8e0');
+            });
+            arch += '<path d="M118 120V198 M202 120V198 M78 218H242" fill="none" stroke="#1793d1" opacity=".35"/>';
+            arch += text(160, 270, 28, '06:28 PM', 'middle');
+            arch += text(160, 294, 15, 'WED: Oct 21', 'middle', '#91aabf');
+            var archPage = document.getElementById('arch_page').value;
+            if (archPage !== 'overview' && archPage !== 'rotate') {
+                arch = text(160, 80, 21, '- Arch Linux -', 'middle') +
+                    text(160, 145, 21, archPage.toUpperCase(), 'middle') +
+                    text(160, 180, 12, 'Native preview required', 'middle');
+            }
+            document.getElementById('mode_preview_arch').innerHTML = '<g transform="scale(.75)">' + arch + '</g>';
+
             var centered = document.getElementById('circle_layout').value === 'centered';
             var load = shown('circle_show_load');
             var withBar = shown('circle_show_bar');
@@ -2933,7 +3029,7 @@
                     }
                     image.setAttribute('href', result.image);
                     image.style.display = '';
-                    status.textContent = 'Cairo renderer preview';
+                    status.textContent = 'Cairo renderer preview (sample readings; rotation previews Overview)';
                 } catch (error) {
                     if (generation === renderPreviewGeneration) {
                         image.removeAttribute('href');
@@ -3024,7 +3120,8 @@
             var descriptions = {
                 dual: 'Two sensors stacked vertically.',
                 split: 'Two sensor columns; visible values share the available space.',
-                circle: 'One sensor at a time; sensors alternate on the device.'
+                circle: 'One sensor at a time; sensors alternate on the device.',
+                arch: 'Arch Linux telemetry with three sensors, live time, and date.'
             };
             Object.keys(descriptions).forEach(function (layout) {
                 document.getElementById('mode_preview_' + layout).style.display = layout === mode ? '' : 'none';
@@ -3111,15 +3208,17 @@
             var mode = document.getElementById('display_mode').value;
             var isCircle = mode === 'circle';
             var isSplit = mode === 'split';
+            var isArch = mode === 'arch';
             var sensorGrid = document.getElementById('sensor_grid');
             document.getElementById('circle_interval_group').style.display = isCircle ? 'block' : 'none';
             document.getElementById('circle_layout_group').style.display = isCircle ? 'block' : 'none';
+            document.getElementById('arch_layout_group').style.display = isArch ? 'block' : 'none';
             document.querySelectorAll('[data-element-mode]').forEach(function (element) {
                 var modes = element.getAttribute('data-element-mode').split(/\s+/);
                 element.style.display = modes.indexOf(mode) !== -1 ? 'flex' : 'none';
             });
-            sensorGrid.classList.toggle('grid-3', isCircle);
-            sensorGrid.classList.toggle('grid-2', !isCircle);
+            sensorGrid.classList.toggle('grid-3', isCircle || isArch);
+            sensorGrid.classList.toggle('grid-2', !isCircle && !isArch);
             var slot1Group = document.getElementById('sensor_slot_1_group');
             var midSlotGroup = document.getElementById('sensor_slot_2_group');
             var slot3Group = document.getElementById('sensor_slot_3_group');
@@ -3127,7 +3226,7 @@
             var sensorRingHint = document.getElementById('sensor_ring_hint');
             var sensorRingSelect = document.getElementById('sensor_ring_sensor');
             if (slot1Group) slot1Group.style.display = 'block';
-            if (midSlotGroup) midSlotGroup.style.display = (isCircle || isSplit) ? 'block' : 'none';
+            if (midSlotGroup) midSlotGroup.style.display = (isCircle || isSplit || isArch) ? 'block' : 'none';
             if (slot3Group) slot3Group.style.display = isSplit ? 'none' : 'block';
             if (midBarHeightGroup) midBarHeightGroup.style.display = isCircle ? 'block' : 'none';
             if (sensorRingHint) sensorRingHint.textContent = isCircle
@@ -3140,7 +3239,9 @@
             }
             var layoutHint = document.getElementById('layout_mode_hint');
             if (layoutHint) {
-                layoutHint.innerHTML = isSplit
+                layoutHint.innerHTML = isArch
+                    ? '<strong>Arch telemetry suite</strong> Overview, CPU, GPU, liquid, and component power pages. Larger brand and live clock/date. Slow orbital light, fixed text, and five page dots. Reduced motion pins Overview during rotation, or keeps your selected fixed page.'
+                    : isSplit
                     ? '<strong>Resolution-aware split layout</strong> The divider and both text columns adapt automatically to the detected LCD shape and size. Temperature values use each sensor\'s threshold colors.'
                     : '<strong>Resolution-aware layout</strong> Bar height, gap, border thickness, degree spacing, and global offsets use logical base units and are scaled uniformly to the LCD resolution. Width and label margins are percentage-based relative to the safe drawable area.';
             }
@@ -3148,8 +3249,8 @@
             var slot2Label = document.getElementById('sensor_slot_2_label');
             var slot1Hint = document.getElementById('sensor_slot_1_hint');
             var slot2Hint = document.getElementById('sensor_slot_2_hint');
-            if (slot1Label) slot1Label.textContent = isSplit ? 'Left' : 'Slot 1';
-            if (slot2Label) slot2Label.textContent = isSplit ? 'Right' : 'Slot 2';
+            if (slot1Label) slot1Label.textContent = isArch ? 'Left' : isSplit ? 'Left' : 'Slot 1';
+            if (slot2Label) slot2Label.textContent = isArch ? 'Center' : isSplit ? 'Right' : 'Slot 2';
             if (slot1Hint) slot1Hint.textContent = isSplit ? 'Default: CPU' : 'Default: CPU';
             if (slot2Hint) slot2Hint.textContent = isSplit ? 'Default: GPU' : 'Default: GPU (Circle only)';
             if (mode === 'dual') {
@@ -3169,6 +3270,13 @@
                 if (midSlot && midSlot.value === 'none') midSlot.value = 'gpu';
                 var slot3 = document.getElementById('sensor_slot_3');
                 if (slot3 && (slot3.value === 'gpu' || slot3.value === 'none')) slot3.value = 'liquid';
+            } else if (mode === 'arch') {
+                var leftSlot = document.getElementById('sensor_slot_1');
+                var centerSlot = document.getElementById('sensor_slot_2');
+                var rightSlot = document.getElementById('sensor_slot_3');
+                if (leftSlot && leftSlot.value === 'none') leftSlot.value = 'cpu';
+                if (centerSlot && centerSlot.value === 'none') centerSlot.value = 'gpu';
+                if (rightSlot && rightSlot.value === 'none') rightSlot.value = 'liquid';
             }
             updateModePreview();
             validateSensorSlots();
@@ -3186,7 +3294,7 @@
 
             var activeSlots = [];
             if (slotUp !== 'none') activeSlots.push({ name: mode === 'split' ? 'Left' : 'Slot 1', value: slotUp });
-            if ((mode === 'circle' || mode === 'split') && slotMid !== 'none') activeSlots.push({ name: mode === 'split' ? 'Right' : 'Slot 2', value: slotMid });
+            if ((mode === 'circle' || mode === 'split' || mode === 'arch') && slotMid !== 'none') activeSlots.push({ name: mode === 'arch' ? 'Center' : mode === 'split' ? 'Right' : 'Slot 2', value: slotMid });
             if (mode !== 'split' && slotDown !== 'none') activeSlots.push({ name: 'Slot 3', value: slotDown });
 
             var usedSensors = {};
@@ -3392,7 +3500,7 @@
                 if (parts.length === 2 && config[parts[0]] !== undefined) {
                     // Sensor slot values must always be strings
                     var isSlotField = (parts[1] === 'sensor_slot_1' || parts[1] === 'sensor_slot_2' || parts[1] === 'sensor_slot_3' || parts[1] === 'sensor_ring_sensor');
-                    if (isSlotField) {
+                    if (isSlotField || Object.prototype.hasOwnProperty.call(ARCH_CHANNEL_LABELS, parts[1])) {
                         config[parts[0]][parts[1]] = value;
                     } else {
                         // Strict number check: only convert pure numeric strings

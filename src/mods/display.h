@@ -106,6 +106,7 @@ typedef struct
 void draw_display_image(const struct Config *config);
 
 /** Render deterministic sample data without sending anything to the LCD. */
+void populate_display_preview_data(const struct Config *config, monitor_sensor_data_t *data);
 int render_display_preview(const struct Config *config,
                            const char *device_name);
 
