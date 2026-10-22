@@ -35,7 +35,9 @@ restore_runtime() {
 }
 trap restore_runtime EXIT
 
-pacman -U --noconfirm "$package_path"
+# Conflict question bit (1 << 2) permits the declared coolerdash replacement
+# while every other pacman prompt retains its noninteractive default.
+pacman -U --noconfirm --ask=4 "$package_path"
 restore_runtime
 trap - EXIT
 
