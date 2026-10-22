@@ -42,6 +42,11 @@ fork commits by itself. Use `update-installed.sh`, or publish the same PKGBUILD
 to the AUR later. The package still participates normally in dependency and file
 ownership checks.
 
+The installer makes a root-owned snapshot of active `config.json` and
+`credentials.json`, completes the pacman transaction, restores those exact
+runtime files, and restarts the plugin. Snapshots remain as
+`package-backup.*` directories beside plugin config for recovery.
+
 For upstream CoolerDash changes, run `packaging/arch/check-upstream.sh`. If new
 commits exist, `prepare-upstream-update.sh` creates a review branch and rebases
 the Arch commits. It stops on conflicts and runs renderer checks after a clean
